@@ -16,24 +16,24 @@ contract NftAuctionHandler is Script {
     address public bob = makeAddr("bob");
     address public charles = makeAddr("charles");
 
-    uint256 internal constant NFT_ID = 1;
-    uint256 internal constant STARTING_BID = 1 ether;
-    uint256 internal constant DURATION = 2; //2 days
+    uint256 public constant NFT_ID = 1;
+    uint256 public constant STARTING_BID = 1 ether;
+    uint256 public constant DURATION = 2; //2 days
 
     // contracts
-    MockNft internal mockNft;
-    NftAuction internal nftAuction;
+    MockNft public mockNft;
+    NftAuction public nftAuction;
 
-    function setUp() public {
+    function run() external {
+        // ============== funding accounts
+        console.log("Funding accounts...");
         // Give Accounts fund
         vm.deal(owner, 10 ether);
         vm.deal(seller, 5 ether);
         vm.deal(alice, 5 ether);
         vm.deal(bob, 5 ether);
         vm.deal(charles, 5 ether);
-    }
 
-    function run() external {
         // =============== Owner Deploying contracts
         //Deploy MockNft
         // Deploy Nft
@@ -99,13 +99,13 @@ contract NftAuctionHandler is Script {
         // ======= End and Withdraw
         // Warp time forward to end time
         uint256 afterTwoDays = nftAuction.toSeconds(DURATION, NftAuction.TimeUnit(2));
-        console.log("After Two Days: " , afterTwoDays);
+        console.log("After Two Days: ", afterTwoDays);
         vm.warp(block.timestamp + 172800 + 1);
 
         vm.startBroadcast(owner);
         uint256 sellerBalanceBefore = seller.balance;
         uint256 feeRecipientBalanceBefore = owner.balance;
-        
+
         console.log("7. Ending auction...");
 
         nftAuction.endAuction(address(mockNft), NFT_ID);

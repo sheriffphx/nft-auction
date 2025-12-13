@@ -6,7 +6,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {NftAuction} from "../src/NftAuction.sol";
 
 contract DeployNftAuction is Script {
-    NftAuction nftAuction;
+    NftAuction public nftAuction;
 
     function run() external {
         vm.startBroadcast();

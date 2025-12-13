@@ -8,9 +8,13 @@ contract MockNft is ERC721 {
     uint256 private tokenIdCounter = 0;
     constructor() ERC721("MockNFT", "MNFT") {}
 
-    function mint(address _to) external returns(uint256){
+    function mint(address _to) external returns (uint256) {
         tokenIdCounter++;
         _safeMint(_to, tokenIdCounter);
         return tokenIdCounter;
+    }
+
+    function ownerOf(uint256 tokenId) public view override returns (address) {
+        return _requireOwned(tokenId);
     }
 }

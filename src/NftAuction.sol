@@ -19,6 +19,8 @@ contract NftAuction is ReentrancyGuard, Ownable, IERC721Receiver {
     error AuctionHasEnded();
     error BidNotHighEnough();
     error NoPendingRefund();
+    error InvalidPrice();
+    error NotNftOwner();
 
     /*//////////////////////////////////////////////////////////////
                                 STATE VARIABLES
@@ -121,6 +123,15 @@ contract NftAuction is ReentrancyGuard, Ownable, IERC721Receiver {
         if (a.seller != address(0) && !a.ended) {
             revert AuctionAlreadyExists();
         }
+        // Check that starting bid is greater than zero
+        if (_startingBid == 0) {
+            revert InvalidPrice();
+        }
+        // Check that the caller is the owner of the NFT
+        IERC721 nftContract = IERC721(nftContractAddress);
+        if (nftContract.ownerOf(_tokenId) != msg.sender) {
+            revert NotNftOwner();
+        }
         // Contract checks user owns the NFT
         IERC721 nft = IERC721(nftContractAddress);
         require(
@@ -131,6 +142,7 @@ contract NftAuction is ReentrancyGuard, Ownable, IERC721Receiver {
         // User approves the contract to transfer NFT
         nft.getApproved(_tokenId);
         uint256 duration = _toSeconds(value, unit);
+        require(duration >= _toSeconds(30, TimeUnit.Minutes), "Duration must be greater than 30 minutes");
         uint256 auctionEndTime = block.timestamp + duration;
         // NFT transferred to contract for escrow
         nft.safeTransferFrom(msg.sender, address(this), _tokenId);
@@ -164,8 +176,10 @@ contract NftAuction is ReentrancyGuard, Ownable, IERC721Receiver {
         onlySeller(nftContractAddress, _tokenId)
     {
         Auction storage a = auctions[nftContractAddress][_tokenId];
-
+        // check if auction exists
+        require(a.seller != address(0), "Auction does not exist");
         // Check if no bid yet before cancel and check if not ended
+        if (block.timestamp >= a.endTime) revert AuctionHasEnded();
         require(!a.ended, "Auction already Ended");
         require(a.highestBid == 0, "Cannot cancel after a bid");
 
